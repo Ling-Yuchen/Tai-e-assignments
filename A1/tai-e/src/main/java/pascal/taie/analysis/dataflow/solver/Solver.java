@@ -82,6 +82,14 @@ public abstract class Solver<Node, Fact> {
 
     protected void initializeBackward(CFG<Node> cfg, DataflowResult<Node, Fact> result) {
         // TODO - finish me
+        // correct initialization order in algorithm: EXIT-node -> other nodes
+        // considering we initialize all nodes in an unordered way in for loop
+        // we re-initialize EXIT-node to make an equivalence to the correct order
+        for (Node node : cfg) {
+            result.setInFact(node, analysis.newInitialFact());
+            result.setOutFact(node, analysis.newInitialFact());
+        }
+        result.setInFact(cfg.getExit(), analysis.newBoundaryFact(cfg));
     }
 
     /**

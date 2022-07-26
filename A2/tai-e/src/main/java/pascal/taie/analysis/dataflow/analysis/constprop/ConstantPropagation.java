@@ -60,7 +60,9 @@ public class ConstantPropagation extends
         // initiate all the arguments with NAC
         CPFact fact = new CPFact();
         for (Var param : cfg.getIR().getParams()) {
-            fact.update(param, Value.getNAC());
+            if (canHoldInt(param)) {
+                fact.update(param, Value.getNAC());
+            }
         }
         return fact;
     }

@@ -131,6 +131,10 @@ public class ConstantPropagation extends
             if (!(canHoldInt(binaryExp.getOperand1()) && canHoldInt(binaryExp.getOperand2()))) {
                 return out.copyFrom(in);
             }
+        } else if (rValue instanceof NegExp negExp) {
+            if (!canHoldInt(negExp.getOperand())) {
+                return out.copyFrom(in);
+            }
         }
 
         // evaluate the abstract value of rValue expression and update the map
@@ -223,6 +227,18 @@ public class ConstantPropagation extends
                         case NE -> { return Value.makeConstant( value1 != value2 ? 1 : 0); }
                     }
                 }
+            }
+            return Value.getUndef();
+        }
+
+        // evaluate negation
+        if (exp instanceof NegExp negExp) {
+            if (in.get(negExp.getOperand()).isNAC()) {
+                return Value.getNAC();
+            }
+            if (in.get(negExp.getOperand()).isConstant()) {
+                int value = in.get(negExp.getOperand()).getConstant();
+                return Value.makeConstant(-value);
             }
             return Value.getUndef();
         }

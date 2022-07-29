@@ -82,28 +82,28 @@ class CHABuilder implements CGBuilder<Invoke, JMethod> {
     private Set<JMethod> resolve(Invoke callSite) {
         // TODO - finish me
         Set<JMethod> targets = new HashSet<>();
-        JClass classType = callSite.getMethodRef().getDeclaringClass();
+        JClass clazz = callSite.getMethodRef().getDeclaringClass();
         Subsignature subsignature = callSite.getMethodRef().getSubsignature();
 
         if (callSite.isStatic()) {
 //            JMethod targetMethod = hierarchy.resolveMethod(callSite.getMethodRef());
-            JClass clazz = callSite.getMethodRef().getDeclaringClass();
+
             Subsignature subSig = callSite.getMethodRef().getSubsignature();
             JMethod targetMethod = clazz.getDeclaredMethod(subSig);
             if (targetMethod != null) { targets.add(targetMethod); }
 
         } else if (callSite.isSpecial()) {
-            JMethod targetMethod = dispatch(classType, subsignature);
+            JMethod targetMethod = dispatch(clazz, subsignature);
             if (targetMethod != null) { targets.add(targetMethod); }
 
         } else if (callSite.isVirtual()) {
             Queue<JClass> subClasses = new ArrayDeque<>();
-            subClasses.add(classType);
+            subClasses.add(clazz);
             while (!subClasses.isEmpty()) {
-                JClass clazz = subClasses.poll();
-                JMethod targetMethod = dispatch(clazz, subsignature);
+                JClass jClass = subClasses.poll();
+                JMethod targetMethod = dispatch(jClass, subsignature);
                 if (targetMethod != null) { targets.add(targetMethod); }
-                subClasses.addAll(hierarchy.getDirectSubclassesOf(clazz));
+                subClasses.addAll(hierarchy.getDirectSubclassesOf(jClass));
             }
         } else if (callSite.isInterface()) {
             // if the call kind is INTERFACE, we should search:
@@ -113,15 +113,15 @@ class CHABuilder implements CGBuilder<Invoke, JMethod> {
             //     the outer loop get all the interfaces
             //     the inner loop get all the classes for each interface
             Queue<JClass> subInterfaces = new ArrayDeque<>();
-            subInterfaces.add(classType);
+            subInterfaces.add(clazz);
             while (!subInterfaces.isEmpty()) {
                 JClass interfaceClass = subInterfaces.poll();
                 Queue<JClass> implClasses = new ArrayDeque<>(hierarchy.getDirectImplementorsOf(interfaceClass));
                 while (!implClasses.isEmpty()) {
-                    JClass clazz = implClasses.poll();
-                    JMethod targetMethod = dispatch(clazz, subsignature);
+                    JClass jClass = implClasses.poll();
+                    JMethod targetMethod = dispatch(jClass, subsignature);
                     if (targetMethod != null) { targets.add(targetMethod); }
-                    implClasses.addAll(hierarchy.getDirectSubclassesOf(clazz));
+                    implClasses.addAll(hierarchy.getDirectSubclassesOf(jClass));
                 }
                 subInterfaces.addAll(hierarchy.getDirectSubinterfacesOf(interfaceClass));
             }

@@ -69,7 +69,6 @@ class InterSolver<Method, Node, Fact> {
         for (Method method : icfg.entryMethods().toList()) {
             Node methodEntry = icfg.getEntryOf(method);
             result.setOutFact(methodEntry, analysis.newBoundaryFact(methodEntry));
-            result.setInFact(methodEntry, analysis.newBoundaryFact(methodEntry));
         }
     }
 
@@ -80,8 +79,10 @@ class InterSolver<Method, Node, Fact> {
         while (!workList.isEmpty()) {
             Node node = workList.poll();
 
-            for (ICFGEdge<Node> edge : icfg.getInEdgesOf(node)) {
-                analysis.meetInto(analysis.transferEdge(edge, result.getOutFact(edge.getSource())), result.getInFact(node));
+            if (!isEntryMethodEntry(node)) {
+                for (ICFGEdge<Node> edge : icfg.getInEdgesOf(node)) {
+                    analysis.meetInto(analysis.transferEdge(edge, result.getOutFact(edge.getSource())), result.getInFact(node));
+                }
             }
 
             if (analysis.transferNode(node, result.getInFact(node), result.getOutFact(node))) {
@@ -92,5 +93,14 @@ class InterSolver<Method, Node, Fact> {
                 }
             }
         }
+    }
+
+    private boolean isEntryMethodEntry(Node node) {
+        for (Method method : icfg.entryMethods().toList()) {
+            if (icfg.getEntryOf(method).equals(node)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
